@@ -16,26 +16,27 @@
 <script>
     let ws;
 
-    function connect() {
-        ws = new WebSocket(`wss://${window.location.host}/ws`);
+        function connect() {
+            const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+            ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
 
-        ws.onopen = function() {
-            console.log("Connected to WebSocket server");
-        };
+            ws.onopen = function() {
+                console.log("✅ Connected to WebSocket server");
+            };
 
-        ws.onmessage = function(event) {
-            let messageDisplay = document.getElementById("messages");
-            messageDisplay.innerHTML += `<p>${event.data}</p>`;
-        };
+            ws.onmessage = function(event) {
+                let messageDisplay = document.getElementById("messages");
+                messageDisplay.innerHTML += `<p>${event.data}</p>`;
+            };
 
-        ws.onclose = function() {
-            console.log("WebSocket connection closed, retrying...");
-            setTimeout(connect, 1000); // Reconnect after 1 second
-        };
+            ws.onclose = function() {
+                console.log("⚠️ WebSocket closed, retrying...");
+                setTimeout(connect, 2000);
+            };
 
-        ws.onerror = function(error) {
-            console.error("WebSocket error:", error);
-        };
+            ws.onerror = function(error) {
+                console.error("❌ WebSocket error:", error);
+            };
     }
 
     function sendMessage() {
