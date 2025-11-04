@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
@@ -55,26 +56,29 @@ func handleMessages() {
 		mutex.Unlock()
 	}
 }
-func handleConnection(conn *websocket.Conn) {
-	for {
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			fmt.Println("Error reading message:", err)
-			break
-		}
-		fmt.Printf("Received: %s\n", message)
-		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			fmt.Println("Error writing message:", err)
-			break
-		}
-	}
+
+func InitRouter() *gin.Engine {
+	r := gin.Default()
+	r.LoadHTMLFiles("index.html")
+	// websocket endpoint
+	r.GET("/ws", func(c *gin.Context) {
+		wsHandler(c.Writer, c.Request)
+	})
+	// serve HTML page
+	r.GET("/chat", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Title": "Chat Room",
+			"User":  "Aibar",
+		})
+	})
+	return r
 }
 func main() {
-	http.HandleFunc("/ws", wsHandler)
 	go handleMessages()
 	fmt.Println("WebSocket server started on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		fmt.Println("Server error:", err)
+	err := InitRouter().Run(":8080")
+	if err != nil {
+		return
 	}
 
 }
